@@ -4,6 +4,7 @@ from linkedin_api import Linkedin
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware 
 import json
 
 # Load environment variables
@@ -24,6 +25,14 @@ linkedin = Linkedin(LINKEDIN_USERNAME, LINKEDIN_PASSWORD)
 
 # Initialize FastAPI
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Add your frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 # Request Model
 class CompanyInput(BaseModel):
@@ -51,6 +60,12 @@ def rank_investors_with_gemini(investors, description):
         - "location": Their location
         - "profile_url": A link to their LinkedIn profile
         - "relevance_score": A score between 0-100 indicating how relevant they are (higher is better).
+        
+        if the linked url contains _ then reduce its relavanace score
+
+        if name is LinkedIn Member then DONT INCLUDE IT IN THE RESPONSE
+
+        if name is present then diplay it at the top of the list
 
         Output ONLY the JSON array, without any extra text.
         """

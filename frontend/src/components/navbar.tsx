@@ -4,9 +4,12 @@ import { Button } from "@/components/ui/button"
 import { Bot, Menu } from "lucide-react"
 import { motion } from "framer-motion"
 import Link from "next/link"
-import type React from "react" // Added import for React
+import type React from "react"
+import { SignInButton, SignUpButton, useAuth, UserButton } from "@clerk/nextjs"
 
 export default function Navbar() {
+  const { isSignedIn } = useAuth();
+
   return (
     <motion.nav
       initial={{ y: -100 }}
@@ -26,10 +29,22 @@ export default function Navbar() {
       </div>
 
       <div className="hidden md:flex items-center space-x-4">
-        <Button variant="ghost" className="text-white hover:text-purple-400">
-          Sign In
-        </Button>
-        <Button className="bg-purple-600 hover:bg-purple-700 text-white">Get Started</Button>
+        {!isSignedIn ? (
+          <>
+            <SignInButton>
+              <Button variant="ghost" className="text-white hover:text-purple-400">
+                Sign In
+              </Button>
+            </SignInButton>
+            <SignUpButton>
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                Get Started
+              </Button>
+            </SignUpButton>
+          </>
+        ) : (
+          <UserButton />
+        )}
       </div>
 
       <Button variant="ghost" size="icon" className="md:hidden text-white">
@@ -47,4 +62,3 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
     </Link>
   )
 }
-
