@@ -1,8 +1,7 @@
-import Hero from "@/components/hero"
-import Navbar from "@/components/navbar"
-import { AppleCardsCarouselDemo } from "@/components/ServicesCard"
-import { SparklesCore } from "@/components/sparkles"
+
 import PricingPage from "@/components/pricing-page"
+import { SparklesCore } from "@/components/sparkles"
+
 
 export default function Home() {
   return (
@@ -21,9 +20,7 @@ export default function Home() {
       </div>
 
       <div className="relative z-10">
-        <Navbar />
-        <Hero />
-        <AppleCardsCarouselDemo/>
+       <PricingPage/>
       
         
       </div>
