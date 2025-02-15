@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, ThumbsUp, ThumbsDown, Copy, Trash, MessageSquare } from 'lucide-react';
-import { Bar } from 'react-chartjs-2';
+import { Bar,Line,Pie,Radar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip, Legend, registerables } from 'chart.js';
 import { generateInsights } from '@/lib/gemini';
 
@@ -46,6 +46,26 @@ export default function ValidationChat() {
     keySellingPoints: string;
     businessModel: string;
     recommendations: string;
+  }
+  interface Competitor {
+    name: string;
+    marketShare: number;
+    strengths: string[];
+    weaknesses: string[];
+    differentiator: string;
+  }
+  
+  interface ValidationResult {
+    scores: {
+      uniqueness: number;
+      marketDemand: number;
+      competition: number;
+      riskFactor: number;
+    };
+    keySellingPoints: string;
+    businessModel: string;
+    recommendations: string;
+    competitors: Competitor[]; // New field
   }
 
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
@@ -130,37 +150,52 @@ export default function ValidationChat() {
     
     const prompt = `
       Analyze the following startup idea with a detailed, multi-dimensional approach:
-      
-      - **Idea**: ${answers[0]}  
-      - **Location**: ${answers[1]}  
-      - **Resources & Funding**: ${answers[2]}  
-      
-      **Provide a structured, data-driven analysis including:**  
+  
+  - **Idea**: ${answers[0]}  
+  - **Location**: ${answers[1]}  
+  - **Resources & Funding**: ${answers[2]}  
+  
+  **Provide a structured, data-driven analysis including:**  
 
-      1. **Scores (0-100)**:
-         - Innovation & Differentiation Score
-         - Market Demand Score
-         - Competitive Landscape Score
-         - Risk & Scalability Factor
+  1. **Scores (0-100)**:
+     - Innovation & Differentiation Score
+     - Market Demand Score
+     - Competitive Landscape Score
+     - Risk & Scalability Factor
 
-      2. **Key Selling Points**:
-         - What makes this idea unique?
-         - What is the USP (Unique Selling Proposition)?
+  2. **Key Selling Points**:
+     - What makes this idea unique?
+     - What is the USP (Unique Selling Proposition)?
 
-      3. **Business Model Viability**:
-         - Revenue streams
-         - Monetization potential
-         - Sustainability
+  3. **Business Model Viability**:
+     - Revenue streams
+     - Monetization potential
+     - Sustainability
 
-      4. **Recommendations**:
-         - Key actionable strategies for success
-         - Investment potential & funding suggestions
+  4. **Competitor Analysis**:
+     - List 3-5 key competitors.
+     - For each competitor, provide:
+       - Name
+       - Market Share (if available)
+       - Strengths
+       - Weaknesses
+       - Key Differentiator
 
-      **Output Format**:
-      - Scores: [Innovation & Differentiation Score, Market Demand Score, Competitive Landscape Score, Risk & Scalability Factor]
-      - Key Selling Points: [Paragraph]
-      - Business Model Viability: [Paragraph]
-      - Recommendations: [Paragraph]
+  5. **Recommendations**:
+     - Key actionable strategies for success
+     - Investment potential & funding suggestions
+
+  **Output Format**:
+  - Scores: [Innovation & Differentiation Score, Market Demand Score, Competitive Landscape Score, Risk & Scalability Factor]
+  - Key Selling Points: [Paragraph]
+  - Business Model Viability: [Paragraph]
+  - Competitor Analysis:
+    - Competitor: [Name]
+      - Market Share: [Value]
+      - Strengths: [List]
+      - Weaknesses: [List]
+      - Differentiator: [Paragraph]
+  - Recommendations: [Paragraph]
     `;
 
     // Call Gemini
@@ -200,11 +235,24 @@ export default function ValidationChat() {
     const recommendationsMatch = text.match(/Recommendations:?\s*([\s\S]*?)$/i);
     const recommendations = recommendationsMatch?.[1]?.trim() || "No recommendations available.";
 
+    const competitors: Competitor[] = [];
+  const competitorBlocks = text.match(/Competitor:\s*([\s\S]*?)(?=\nCompetitor:|$)/gi) || [];
+  competitorBlocks.forEach((block) => {
+    const name = block.match(/Name:\s*([^\n]+)/i)?.[1]?.trim() || "Unknown";
+    const marketShare = parseInt(block.match(/Market Share:\s*(\d+)/i)?.[1] || '0');
+    const strengths = block.match(/Strengths:\s*([\s\S]*?)(?=\nWeaknesses:|$)/i)?.[1]?.trim().split('\n').map(s => s.replace(/^\*\s*/, '')) || [];
+    const weaknesses = block.match(/Weaknesses:\s*([\s\S]*?)(?=\nDifferentiator:|$)/i)?.[1]?.trim().split('\n').map(s => s.replace(/^\*\s*/, '')) || [];
+    const differentiator = block.match(/Differentiator:\s*([^\n]+)/i)?.[1]?.trim() || "No differentiator available.";
+
+    competitors.push({ name, marketShare, strengths, weaknesses, differentiator });
+  });
+
     return {
       scores,
       keySellingPoints,
       businessModel,
       recommendations,
+      competitors,
     };
   };
 
@@ -316,95 +364,259 @@ export default function ValidationChat() {
           
           {/* Analysis results */}
           {validationResult && analysisComplete && (
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-[#A855F7] flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.5)]">
-                AI
+  <div className="flex items-start gap-3">
+    <div className="w-8 h-8 rounded-full bg-[#A855F7] flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.5)]">
+      AI
+    </div>
+    <div className="flex-1">
+      <div className="flex items-center gap-2">
+        <span className="font-medium text-white">AI Agent</span>
+        <span className="text-sm text-gray-400">{formatTime(new Date())}</span>
+      </div>
+      <div className="mt-1 p-4 rounded-lg bg-[#2D1D50] text-white space-y-4 shadow-[0_0_10px_rgba(168,85,247,0.3)]">
+        <h3 className="text-lg font-semibold">Analysis Results</h3>
+        
+        {/* Scores Chart */}
+        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+          <h4 className="text-base font-semibold mb-2">Scores</h4>
+          <div className="h-64">
+            <Bar
+              data={{
+                labels: ['Uniqueness', 'Market Demand', 'Competition', 'Risk Factor'],
+                datasets: [{
+                  label: 'Score',
+                  data: [
+                    validationResult.scores.uniqueness,
+                    validationResult.scores.marketDemand,
+                    validationResult.scores.competition,
+                    validationResult.scores.riskFactor,
+                  ],
+                  backgroundColor: ['#8B5CF6', '#22D3EE', '#F87171', '#FACC15'],
+                }],
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: { beginAtZero: true, max: 100 },
+                  x: { grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                },
+                plugins: { legend: { display: false } },
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Market Demand Trends */}
+        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+          <h4 className="text-base font-semibold mb-2">Market Demand Trends</h4>
+          <div className="h-64">
+            <Line
+              data={{
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                  label: 'Market Demand',
+                  data: [65, 59, 80, 81, 56, 55, 40, 70, 75, 85, 90, 95],
+                  borderColor: '#8B5CF6',
+                  fill: false,
+                }],
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: { beginAtZero: true },
+                  x: { grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                },
+                plugins: { legend: { display: false } },
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Competitor Market Share */}
+        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+          <h4 className="text-base font-semibold mb-2">Competitor Market Share</h4>
+          <div className="h-64">
+            <Pie
+              data={{
+                labels: validationResult.competitors.map(competitor => competitor.name),
+                datasets: [{
+                  label: 'Market Share',
+                  data: validationResult.competitors.map(competitor => competitor.marketShare),
+                  backgroundColor: ['#8B5CF6', '#22D3EE', '#F87171', '#FACC15', '#4ADE80'],
+                }],
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true, position: 'bottom' } },
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Risk Analysis */}
+        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+          <h4 className="text-base font-semibold mb-2">Risk Analysis</h4>
+          <div className="h-64">
+            <Radar
+              data={{
+                labels: ['Financial Risk', 'Market Risk', 'Operational Risk', 'Regulatory Risk', 'Technological Risk'],
+                datasets: [{
+                  label: 'Risk Level',
+                  data: [65, 59, 80, 81, 56],
+                  backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                  borderColor: '#8B5CF6',
+                }],
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  r: { beginAtZero: true },
+                },
+                plugins: { legend: { display: false } },
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Revenue Projections */}
+        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+          <h4 className="text-base font-semibold mb-2">Revenue Projections</h4>
+          <div className="h-64">
+            <Line
+              data={{
+                labels: ['2023', '2024', '2025', '2026', '2027'],
+                datasets: [{
+                  label: 'Revenue',
+                  data: [100000, 150000, 200000, 250000, 300000],
+                  borderColor: '#8B5CF6',
+                  fill: false,
+                }],
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: { beginAtZero: true },
+                  x: { grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                },
+                plugins: { legend: { display: false } },
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Customer Segmentation */}
+        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+          <h4 className="text-base font-semibold mb-2">Customer Segmentation</h4>
+          <div className="h-64">
+            <Pie
+              data={{
+                labels: ['Segment A', 'Segment B', 'Segment C', 'Segment D'],
+                datasets: [{
+                  label: 'Customer Segmentation',
+                  data: [40, 30, 20, 10],
+                  backgroundColor: ['#8B5CF6', '#22D3EE', '#F87171', '#FACC15'],
+                }],
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true, position: 'bottom' } },
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Key Selling Points */}
+        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+          <h4 className="text-base font-semibold mb-2">Key Selling Points</h4>
+          <p className="text-gray-300 text-sm">{validationResult.keySellingPoints}</p>
+        </div>
+
+        {/* Business Model Viability */}
+        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+          <h4 className="text-base font-semibold mb-2">Business Model Viability</h4>
+          <p className="text-gray-300 text-sm">{validationResult.businessModel}</p>
+        </div>
+
+        {/* Competitor Analysis */}
+        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+          <h4 className="text-base font-semibold mb-2">Competitor Analysis</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {validationResult.competitors.map((competitor, idx) => (
+              <div key={idx} className="p-4 bg-[#1E1433]/70 rounded-lg shadow-[0_0_5px_rgba(168,85,247,0.3)]">
+                <h5 className="font-semibold text-purple-400 mb-3">{competitor.name}</h5>
+                
+                {/* Market Share Pie Chart */}
+                <div className="mb-4">
+                  <h6 className="text-sm font-medium text-gray-300 mb-2">Market Share</h6>
+                  <div className="h-32">
+                    <Bar
+                      data={{
+                        labels: ['Competitor', 'Remaining Market'],
+                        datasets: [{
+                          label: 'Market Share',
+                          data: [competitor.marketShare, 100 - competitor.marketShare],
+                          backgroundColor: ['#8B5CF6', '#433b5c'],
+                        }],
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Strengths and Weaknesses */}
+                <div className="space-y-2">
+                  <h6 className="text-sm font-medium text-gray-300">Strengths</h6>
+                  <ul className="space-y-1">
+                    {competitor.strengths.map((strength, idx) => (
+                      <li key={idx} className="flex items-center gap-2 text-sm text-gray-300">
+                        <span className="text-green-400">✅</span>
+                        {strength}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="space-y-2 mt-3">
+                  <h6 className="text-sm font-medium text-gray-300">Weaknesses</h6>
+                  <ul className="space-y-1">
+                    {competitor.weaknesses.map((weakness, idx) => (
+                      <li key={idx} className="flex items-center gap-2 text-sm text-gray-300">
+                        <span className="text-red-400">❌</span>
+                        {weakness}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Differentiator */}
+                <div className="mt-4">
+                  <h6 className="text-sm font-medium text-gray-300">Differentiator</h6>
+                  <p className="text-sm text-gray-300">{competitor.differentiator}</p>
+                </div>
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-white">AI Agent</span>
-                  <span className="text-sm text-gray-400">{formatTime(new Date())}</span>
-                </div>
-                <div className="mt-1 p-4 rounded-lg bg-[#2D1D50] text-white space-y-4 shadow-[0_0_10px_rgba(168,85,247,0.3)]">
-                  <h3 className="text-lg font-semibold">Analysis Results</h3>
-                  
-                  {/* Scores Chart */}
-                  <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
-                    <h4 className="text-base font-semibold mb-2">Scores</h4>
-                    <div className="h-64">
-                      <Bar
-                        data={{
-                          labels: ['Uniqueness', 'Market Demand', 'Competition', 'Risk Factor'],
-                          datasets: [{
-                            label: 'Score',
-                            data: [
-                              validationResult.scores.uniqueness,
-                              validationResult.scores.marketDemand,
-                              validationResult.scores.competition,
-                              validationResult.scores.riskFactor,
-                            ],
-                            backgroundColor: ['#8B5CF6', '#22D3EE', '#F87171', '#FACC15'],
-                          }],
-                        }}
-                        options={{
-                          responsive: true,
-                          maintainAspectRatio: false,
-                          scales: {
-                            y: {
-                              beginAtZero: true,
-                              max: 100,
-                              grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                              },
-                              ticks: {
-                                color: 'rgba(255, 255, 255, 0.7)'
-                              }
-                            },
-                            x: {
-                              grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                              },
-                              ticks: {
-                                color: 'rgba(255, 255, 255, 0.7)'
-                              }
-                            }
-                          },
-                          plugins: {
-                            legend: {
-                              display: false
-                            }
-                          }
-                        }}
-                      />
-                    </div>
-                  </div>
+            ))}
+          </div>
+        </div>
 
-                  {/* Key Selling Points */}
-                  <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
-                    <h4 className="text-base font-semibold mb-2">Key Selling Points</h4>
-                    <p className="text-gray-300 text-sm">{validationResult.keySellingPoints}</p>
-                  </div>
-
-                  {/* Business Model Viability */}
-                  <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
-                    <h4 className="text-base font-semibold mb-2">Business Model Viability</h4>
-                    <p className="text-gray-300 text-sm">{validationResult.businessModel}</p>
-                  </div>
-
-                  {/* Recommendations */}
-                  <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
-                    <h4 className="text-base font-semibold mb-2">Recommendations</h4>
-                    <p className="text-gray-300 text-sm">{validationResult.recommendations}</p>
-                  </div>
-                </div>
-                <div className="mt-1 flex gap-2">
-                  <button className="p-1 text-gray-400 hover:text-white"><Copy size={16} /></button>
-                  <button className="p-1 text-gray-400 hover:text-white"><ThumbsUp size={16} /></button>
-                  <button className="p-1 text-gray-400 hover:text-white"><ThumbsDown size={16} /></button>
-                </div>
-              </div>
-            </div>
-          )}
+        {/* Recommendations */}
+        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+          <h4 className="text-base font-semibold mb-2">Recommendations</h4>
+          <p className="text-gray-300 text-sm">{validationResult.recommendations}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
           
           {loading && (
             <div className="flex items-start gap-3">
