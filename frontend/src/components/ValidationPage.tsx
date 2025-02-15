@@ -3,18 +3,38 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ThumbsUp, ThumbsDown, Copy, Trash, MessageSquare } from 'lucide-react';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip, Legend, registerables } from 'chart.js';
 import { generateInsights } from '@/lib/gemini';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend, ...registerables);
 
+// Define message type
+type Message = {
+  role: 'user' | 'agent';
+  content: string;
+  timestamp: string;
+  isQuestion?: boolean;
+};
+
 export default function ValidationChat() {
-  const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [responses, setResponses] = useState<{ question: string; answer: string }[]>([]);
+  const [activeChat, setActiveChat] = useState('current');
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: 'agent',
+      content: "Welcome to the AI Startup Validator! Let's analyze your startup idea. What's your startup idea?",
+      timestamp: formatTime(new Date()),
+      isQuestion: true
+    }
+  ]);
   const [input, setInput] = useState('');
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [analysisComplete, setAnalysisComplete] = useState(false);
+  const [chatHistory, setChatHistory] = useState([
+    { id: 'current', name: 'Current Chat', active: true }
+  ]);
 
   interface ValidationResult {
     scores: {
@@ -35,92 +55,150 @@ export default function ValidationChat() {
     "Do you have any existing resources or funding? (Yes/No)"
   ];
 
-  const handleNextStep = async () => {
-    if (!input) return;
-    setResponses([...responses, { question: questions[step], answer: input }]);
+  function formatTime(date: Date): string {
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    
+    const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+    
+    return `${hours}:${formattedMinutes} ${ampm}`;
+  }
+
+  const handleSubmit = async () => {
+    if (!input.trim()) return;
+    
+    // Add user message
+    const newMessages: Message[] = [
+      ...messages,
+      {
+        role: 'user',
+        content: input,
+        timestamp: formatTime(new Date())
+      }
+    ];
+    
+    setMessages(newMessages);
     setInput('');
     setLoading(true);
-    setTimeout(() => {
-      if (step === questions.length - 1) {
-        generateAnalysis();
-      } else {
-        setStep(step + 1);
+    
+    // If we haven't asked all questions yet
+    if (currentQuestion < questions.length - 1) {
+      // Add next question from agent
+      setTimeout(() => {
+        setMessages([
+          ...newMessages,
+          {
+            role: 'agent',
+            content: questions[currentQuestion + 1],
+            timestamp: formatTime(new Date()),
+            isQuestion: true
+          }
+        ]);
+        setCurrentQuestion(currentQuestion + 1);
+        setLoading(false);
+      }, 1000);
+    } else if (currentQuestion === questions.length - 1 && !analysisComplete) {
+      // Time to generate analysis
+      try {
+        await generateAnalysis(newMessages);
+        setAnalysisComplete(true);
+      } catch (error) {
+        console.error("Error generating analysis:", error);
+        setMessages([
+          ...newMessages,
+          {
+            role: 'agent',
+            content: "Sorry, I encountered an error while analyzing your startup. Please try again.",
+            timestamp: formatTime(new Date())
+          }
+        ]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    }, 1500);
-  };
-
-  const generateAnalysis = async () => {
-    setLoading(true);
-    try {
-      const prompt = `
-        Analyze the following startup idea with a detailed, multi-dimensional approach:
-        
-        - **Idea**: ${responses[0]?.answer}  
-        - **Location**: ${responses[1]?.answer}  
-        - **Resources & Funding**: ${responses[2]?.answer}  
-        
-        **Provide a structured, data-driven analysis including:**  
-
-        1. **Scores (0-100)**:
-           - Innovation & Differentiation Score
-           - Market Demand Score
-           - Competitive Landscape Score
-           - Risk & Scalability Factor
-
-        2. **Key Selling Points**:
-           - What makes this idea unique?
-           - What is the USP (Unique Selling Proposition)?
-
-        3. **Business Model Viability**:
-           - Revenue streams
-           - Monetization potential
-           - Sustainability
-
-        4. **Recommendations**:
-           - Key actionable strategies for success
-           - Investment potential & funding suggestions
-
-        **Output Format**:
-        - Scores: [Innovation & Differentiation Score, Market Demand Score, Competitive Landscape Score, Risk & Scalability Factor]
-        - Key Selling Points: [Paragraph]
-        - Business Model Viability: [Paragraph]
-        - Recommendations: [Paragraph]
-      `;
-
-      // Call Gemini
-      const insights = await generateInsights(prompt);
-      console.log("Gemini Response:", insights); // Debug log
-
-      // Parse and set insights
-      const parsedInsights = parseInsights(insights);
-      setValidationResult(parsedInsights);
-    } catch (error) {
-      console.error("Error generating analysis:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  const parseInsights = (text: string): ValidationResult => {
-    console.log("Parsing insights:", text);
+  const generateAnalysis = async (currentMessages: Message[]) => {
+    // Extract answers
+    const answers = currentMessages
+      .filter(msg => msg.role === 'user')
+      .map(msg => msg.content);
+    
+    const prompt = `
+      Analyze the following startup idea with a detailed, multi-dimensional approach:
+      
+      - **Idea**: ${answers[0]}  
+      - **Location**: ${answers[1]}  
+      - **Resources & Funding**: ${answers[2]}  
+      
+      **Provide a structured, data-driven analysis including:**  
 
+      1. **Scores (0-100)**:
+         - Innovation & Differentiation Score
+         - Market Demand Score
+         - Competitive Landscape Score
+         - Risk & Scalability Factor
+
+      2. **Key Selling Points**:
+         - What makes this idea unique?
+         - What is the USP (Unique Selling Proposition)?
+
+      3. **Business Model Viability**:
+         - Revenue streams
+         - Monetization potential
+         - Sustainability
+
+      4. **Recommendations**:
+         - Key actionable strategies for success
+         - Investment potential & funding suggestions
+
+      **Output Format**:
+      - Scores: [Innovation & Differentiation Score, Market Demand Score, Competitive Landscape Score, Risk & Scalability Factor]
+      - Key Selling Points: [Paragraph]
+      - Business Model Viability: [Paragraph]
+      - Recommendations: [Paragraph]
+    `;
+
+    // Call Gemini
+    const insights = await generateInsights(prompt);
+    
+    // Parse insights
+    const parsedInsights = parseInsights(insights);
+    setValidationResult(parsedInsights);
+    
+    // Add analysis message
+    setMessages([
+      ...currentMessages,
+      {
+        role: 'agent',
+        content: "I've analyzed your startup idea. Here are the results:",
+        timestamp: formatTime(new Date())
+      }
+    ]);
+  };
+
+  const parseInsights = (text: string): ValidationResult => {
     // Extract scores
     const scores = {
-      uniqueness: parseInt(text.match(/Innovation & Differentiation Score:\s*(\d+)/)?.[1] || '0'),
-      marketDemand: parseInt(text.match(/Market Demand Score:\s*(\d+)/)?.[1] || '0'),
-      competition: parseInt(text.match(/Competitive Landscape Score:\s*(\d+)/)?.[1] || '0'),
-      riskFactor: parseInt(text.match(/Risk & Scalability Factor:\s*(\d+)/)?.[1] || '0'),
+      uniqueness: parseInt(text.match(/Innovation & Differentiation Score:\s*(\d+)/i)?.[1] || '0'),
+      marketDemand: parseInt(text.match(/Market Demand Score:\s*(\d+)/i)?.[1] || '0'),
+      competition: parseInt(text.match(/Competitive Landscape Score:\s*(\d+)/i)?.[1] || '0'),
+      riskFactor: parseInt(text.match(/Risk & Scalability Factor:\s*(\d+)/i)?.[1] || '0'),
     };
 
-    // Extract key selling points
-    const keySellingPoints = text.match(/Key Selling Points:\s*([\s\S]*?)(?=\n\*\*|$)/)?.[1]?.trim() || "No key selling points available.";
-
-    // Extract business model viability
-    const businessModel = text.match(/Business Model Viability:\s*([\s\S]*?)(?=\n\*\*|$)/)?.[1]?.trim() || "No business model viability available.";
-
-    // Extract recommendations
-    const recommendations = text.match(/Recommendations:\s*([\s\S]*?)(?=\n\*\*|$)/)?.[1]?.trim() || "No recommendations available.";
+    // Extract key sections with more robust patterns
+    const keySellingPointsMatch = text.match(/Key Selling Points:?\s*([\s\S]*?)(?=\s*Business Model Viability:|$)/i);
+    const keySellingPoints = keySellingPointsMatch?.[1]?.trim() || "No key selling points available.";
+    
+    const businessModelMatch = text.match(/Business Model Viability:?\s*([\s\S]*?)(?=\s*Recommendations:|$)/i);
+    const businessModel = businessModelMatch?.[1]?.trim() || "No business model viability available.";
+    
+    const recommendationsMatch = text.match(/Recommendations:?\s*([\s\S]*?)$/i);
+    const recommendations = recommendationsMatch?.[1]?.trim() || "No recommendations available.";
 
     return {
       scores,
@@ -130,72 +208,242 @@ export default function ValidationChat() {
     };
   };
 
+  const startNewChat = () => {
+    const newChatId = `chat-${Date.now()}`;
+    setChatHistory([
+      ...chatHistory.map(chat => ({...chat, active: false})),
+      { id: newChatId, name: `Chat ${chatHistory.length}`, active: true }
+    ]);
+    
+    setActiveChat(newChatId);
+    setMessages([{
+      role: 'agent',
+      content: "Welcome to the AI Startup Validator! Let's analyze your startup idea. What's your startup idea?",
+      timestamp: formatTime(new Date()),
+      isQuestion: true
+    }]);
+    setCurrentQuestion(0);
+    setAnalysisComplete(false);
+    setValidationResult(null);
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-purple-900 via-indigo-900 to-black text-white p-6">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-2xl w-full bg-opacity-30 bg-white/10 backdrop-blur-lg p-6 rounded-2xl shadow-xl">
-        <h1 className="text-3xl font-bold text-center mb-6">AI Startup Validator 🚀</h1>
-        <div className="space-y-4">
-          {responses.map((res, idx) => (
-            <motion.div key={idx} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 bg-black/40 rounded-lg">
-              <p className="text-gray-300">{res.question}</p>
-              <p className="font-semibold text-lg">{res.answer}</p>
-            </motion.div>
-          ))}
-          {step < questions.length && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 bg-black/40 rounded-lg">
-              <p className="text-gray-300">{questions[step]}</p>
-              <Input value={input} onChange={(e) => setInput(e.target.value)} className="mt-2 bg-black/20 border border-gray-500" />
-              <Button onClick={handleNextStep} className="mt-3 w-full bg-purple-600 hover:bg-purple-700" disabled={loading}>
-                {loading ? <Loader2 className="animate-spin mx-auto" /> : "Next"}
-              </Button>
-            </motion.div>
-          )}
+    <div className="flex h-screen overflow-hidden bg-[#1E1433]">
+      {/* Sidebar for chat history */}
+      <div className="w-64 flex-shrink-0 border-r border-purple-900 border-opacity-50 shadow-[1px_0_5px_rgba(168,85,247,0.3)] bg-[#191129] text-white">
+        <div className="p-4 border-b border-purple-900 border-opacity-50">
+          <h2 className="text-xl font-semibold">SoloFounder.AI</h2>
         </div>
-        {validationResult && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 p-6 bg-black/40 rounded-lg text-center">
-            <h2 className="text-2xl font-semibold">Market Analysis</h2>
-            <div className="mt-4 space-y-6">
-              {/* Scores Chart */}
-              <div className="p-4 bg-black/20 rounded-lg">
-                <h3 className="text-xl font-semibold">Scores</h3>
-                <Bar
-                  data={{
-                    labels: ['Uniqueness', 'Market Demand', 'Competition', 'Risk Factor'],
-                    datasets: [{
-                      label: 'Score',
-                      data: [
-                        validationResult.scores.uniqueness,
-                        validationResult.scores.marketDemand,
-                        validationResult.scores.competition,
-                        validationResult.scores.riskFactor,
-                      ],
-                      backgroundColor: ['#8B5CF6', '#22D3EE', '#F87171', '#FACC15'],
-                    }],
-                  }}
-                />
+        <div className="p-4">
+          <Button 
+            onClick={startNewChat}
+            className="w-full bg-[#A855F7] hover:bg-purple-600 text-white flex items-center gap-2 shadow-[0_0_10px_rgba(168,85,247,0.5)]"
+          >
+            <MessageSquare size={16} />
+            New Chat
+          </Button>
+        </div>
+        <div className="px-2 pb-4 space-y-1 overflow-y-auto max-h-[calc(100vh-120px)]">
+          <div className="mb-2 px-2 text-xs uppercase text-gray-400 font-semibold">Recent Chats</div>
+          <div className="rounded-md overflow-hidden border border-purple-900 border-opacity-30">
+            <div 
+              className="p-2 bg-[#2D1D50] cursor-pointer flex items-center gap-2"
+            >
+              <MessageSquare size={16} className="text-gray-400" />
+              <span className="text-sm truncate">Current Chat</span>
+            </div>
+          </div>
+          {chatHistory.filter(chat => chat.id !== 'current').map((chat) => (
+            <div 
+              key={chat.id}
+              className={`p-2 rounded-md cursor-pointer flex items-center gap-2 ${
+                chat.active ? 'bg-[#2D1D50]' : 'hover:bg-[#2D1D50]/50'
+              }`}
+              onClick={() => setActiveChat(chat.id)}
+            >
+              <MessageSquare size={16} className="text-gray-400" />
+              <span className="text-sm truncate">{chat.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col min-w-0 max-h-screen">
+        {/* Header */}
+        <div className="p-4 border-b border-purple-900 border-opacity-50 shadow-[0_1px_5px_rgba(168,85,247,0.3)] bg-[#1E1433] text-white flex justify-between items-center">
+          <h1 className="text-xl font-semibold">AI Startup Validator</h1>
+          <Button 
+            variant="ghost" 
+            className="text-white hover:bg-purple-800"
+            onClick={startNewChat}
+          >
+            New Chat
+          </Button>
+        </div>
+        
+        {/* Chat area - make sure this has a fixed height and scrolls */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+          {messages.map((message, idx) => (
+            <div key={idx} className="flex items-start gap-3">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.5)] ${
+                message.role === 'agent' ? 'bg-[#A855F7]' : 'bg-gray-600'
+              }`}>
+                {message.role === 'agent' ? 'AI' : 'You'}
               </div>
-
-              {/* Key Selling Points */}
-              <div className="p-4 bg-black/20 rounded-lg">
-                <h3 className="text-xl font-semibold">Key Selling Points</h3>
-                <p className="text-gray-300">{validationResult.keySellingPoints}</p>
-              </div>
-
-              {/* Business Model Viability */}
-              <div className="p-4 bg-black/20 rounded-lg">
-                <h3 className="text-xl font-semibold">Business Model Viability</h3>
-                <p className="text-gray-300">{validationResult.businessModel}</p>
-              </div>
-
-              {/* Recommendations */}
-              <div className="p-4 bg-black/20 rounded-lg">
-                <h3 className="text-xl font-semibold">Recommendations</h3>
-                <p className="text-gray-300">{validationResult.recommendations}</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-white">{message.role === 'agent' ? 'AI Agent' : 'You'}</span>
+                  <span className="text-sm text-gray-400">{message.timestamp}</span>
+                </div>
+                <div className={`mt-1 p-3 rounded-lg ${
+                  message.role === 'agent' 
+                    ? 'bg-[#2D1D50] text-white shadow-[0_0_5px_rgba(168,85,247,0.3)]' 
+                    : 'bg-[#433b5c] text-white'
+                }`}>
+                  {message.content}
+                </div>
+                {message.role === 'agent' && (
+                  <div className="mt-1 flex gap-2">
+                    <button className="p-1 text-gray-400 hover:text-white"><Copy size={16} /></button>
+                    <button className="p-1 text-gray-400 hover:text-white"><ThumbsUp size={16} /></button>
+                    <button className="p-1 text-gray-400 hover:text-white"><ThumbsDown size={16} /></button>
+                  </div>
+                )}
               </div>
             </div>
-          </motion.div>
-        )}
-      </motion.div>
+          ))}
+          
+          {/* Analysis results */}
+          {validationResult && analysisComplete && (
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-[#A855F7] flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.5)]">
+                AI
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-white">AI Agent</span>
+                  <span className="text-sm text-gray-400">{formatTime(new Date())}</span>
+                </div>
+                <div className="mt-1 p-4 rounded-lg bg-[#2D1D50] text-white space-y-4 shadow-[0_0_10px_rgba(168,85,247,0.3)]">
+                  <h3 className="text-lg font-semibold">Analysis Results</h3>
+                  
+                  {/* Scores Chart */}
+                  <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+                    <h4 className="text-base font-semibold mb-2">Scores</h4>
+                    <div className="h-64">
+                      <Bar
+                        data={{
+                          labels: ['Uniqueness', 'Market Demand', 'Competition', 'Risk Factor'],
+                          datasets: [{
+                            label: 'Score',
+                            data: [
+                              validationResult.scores.uniqueness,
+                              validationResult.scores.marketDemand,
+                              validationResult.scores.competition,
+                              validationResult.scores.riskFactor,
+                            ],
+                            backgroundColor: ['#8B5CF6', '#22D3EE', '#F87171', '#FACC15'],
+                          }],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          scales: {
+                            y: {
+                              beginAtZero: true,
+                              max: 100,
+                              grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                              },
+                              ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                              }
+                            },
+                            x: {
+                              grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                              },
+                              ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                              }
+                            }
+                          },
+                          plugins: {
+                            legend: {
+                              display: false
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Key Selling Points */}
+                  <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+                    <h4 className="text-base font-semibold mb-2">Key Selling Points</h4>
+                    <p className="text-gray-300 text-sm">{validationResult.keySellingPoints}</p>
+                  </div>
+
+                  {/* Business Model Viability */}
+                  <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+                    <h4 className="text-base font-semibold mb-2">Business Model Viability</h4>
+                    <p className="text-gray-300 text-sm">{validationResult.businessModel}</p>
+                  </div>
+
+                  {/* Recommendations */}
+                  <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+                    <h4 className="text-base font-semibold mb-2">Recommendations</h4>
+                    <p className="text-gray-300 text-sm">{validationResult.recommendations}</p>
+                  </div>
+                </div>
+                <div className="mt-1 flex gap-2">
+                  <button className="p-1 text-gray-400 hover:text-white"><Copy size={16} /></button>
+                  <button className="p-1 text-gray-400 hover:text-white"><ThumbsUp size={16} /></button>
+                  <button className="p-1 text-gray-400 hover:text-white"><ThumbsDown size={16} /></button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {loading && (
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-[#A855F7] flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.5)]">
+                AI
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-white">AI Agent</span>
+                  <span className="text-sm text-gray-400">{formatTime(new Date())}</span>
+                </div>
+                <div className="mt-1 p-3 rounded-lg bg-[#2D1D50] text-white flex items-center gap-2 shadow-[0_0_5px_rgba(168,85,247,0.3)]">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Thinking...</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        {/* Input area - fixed at bottom */}
+        <div className="p-4 border-t border-purple-900 border-opacity-50 shadow-[0_-1px_5px_rgba(168,85,247,0.3)] bg-[#1E1433]">
+          <div className="flex gap-2 max-w-full">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSubmit()}
+              placeholder="Type your message..."
+              className="bg-[#2E1F47] border-gray-700 text-white flex-1 min-w-0"
+            />
+            <Button 
+              onClick={handleSubmit} 
+              disabled={loading || !input.trim()}
+              className="bg-[#A855F7] hover:bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.5)] flex-shrink-0"
+            >
+              Send
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
