@@ -1,8 +1,6 @@
-// src/components/CollaborationModal.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import emailjs from 'emailjs-com';
 
-// Modal component for collaboration form
 interface CollaborationModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,6 +12,29 @@ interface CollaborationModalProps {
 const CollaborationModal: React.FC<CollaborationModalProps> = ({ isOpen, onClose, investor }) => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [emailTemplate, setEmailTemplate] = useState<string>('');
+
+  useEffect(() => {
+    const initialTemplate = `
+Dear ${investor.name},
+
+I hope this message finds you well. I wanted to reach out regarding a potential collaboration with you on our project at SoloFounder.Ai.
+
+Here are the details:
+
+Product: Your Product Name
+Timeline: Your Project Timeline
+
+Message:
+${message}
+
+Looking forward to hearing your thoughts!
+
+Best regards,
+SoloFounder.Ai
+    `;
+    setEmailTemplate(initialTemplate);
+  }, [investor.name, message]);
 
   const handleSendEmail = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -25,11 +46,11 @@ const CollaborationModal: React.FC<CollaborationModalProps> = ({ isOpen, onClose
 
     const emailTemplateParams: Record<string, unknown> = {
       to_name: investor.name,
-      from_name: 'SoloFounder.Ai',  // Add your company name here
+      from_name: 'SoloFounder.Ai',
       message: message,
       product: 'Your Product Name',
       timeline: 'Your Project Timeline',
-      user_email: 'joshuadmello777@gmail.com' // Your email here
+      user_email: 'joshuadmello777@gmail.com'
     };
 
     emailjs.send(serviceID, templateID, emailTemplateParams, userID)
@@ -47,20 +68,22 @@ const CollaborationModal: React.FC<CollaborationModalProps> = ({ isOpen, onClose
 
   return isOpen ? (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-gray-900 p-8 rounded-lg shadow-xl w-96 text-white">
-        <h3 className="text-2xl font-semibold mb-4">Collaborate with {investor.name}</h3>
+      <div className="bg-gray-900 p-6 rounded-lg shadow-2xl w-96 text-white">
+        <h3 className="text-2xl font-bold mb-4">Collaborate with {investor.name}</h3>
+        
         <form onSubmit={handleSendEmail} className="space-y-4">
           <div className="flex flex-col">
-            <label className="text-lg">Your Message:</label>
+            <label className="text-lg font-medium mb-2">Email Template Preview:</label>
             <textarea
-              className="p-3 border border-gray-700 rounded-md w-full bg-gray-800 text-white"
-              value={message}
+              className="p-3 border border-gray-700 rounded-md w-full bg-gray-800 text-white focus:ring-2 focus:ring-green-400"
+              value={emailTemplate}
               onChange={(e) => setMessage(e.target.value)}
-              rows={4}
+              rows={6}
               required
             />
           </div>
-          <div className="flex justify-between">
+
+          <div className="flex justify-end space-x-3">
             <button
               type="button"
               onClick={onClose}
