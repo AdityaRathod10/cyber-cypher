@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import emailjs from 'emailjs-com';
 
-
 // Modal component for collaboration form
 interface CollaborationModalProps {
   isOpen: boolean;
@@ -16,48 +15,45 @@ const CollaborationModal: React.FC<CollaborationModalProps> = ({ isOpen, onClose
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-
-
-const handleSendEmail = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSendEmail = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
-    
     const serviceID = 'service_o87a4tx';
     const templateID = 'template_steejhs';
     const userID = 'L2RX1rjQbdU3ZaaNj';
 
     const emailTemplateParams: Record<string, unknown> = {
-        to_name: investor.name,
-        from_name: 'SoloFounder.Ai',  // Add your company name here
-        message: message,
-        product: 'Your Product Name',
-        timeline: 'Your Project Timeline',
-        user_email: 'joshuadmello777@gmail.com' // Your email here
+      to_name: investor.name,
+      from_name: 'SoloFounder.Ai',  // Add your company name here
+      message: message,
+      product: 'Your Product Name',
+      timeline: 'Your Project Timeline',
+      user_email: 'joshuadmello777@gmail.com' // Your email here
     };
 
     emailjs.send(serviceID, templateID, emailTemplateParams, userID)
-        .then(() => {
-            alert('Email Sent Successfully!');
-            setLoading(false);
-            onClose();
-        })
-        .catch((error) => {
-            console.error('Email sending error:', error);
-            alert('Failed to send email, please try again later.');
-            setLoading(false);
-        });
-};
+      .then(() => {
+        alert('Email Sent Successfully!');
+        setLoading(false);
+        onClose();
+      })
+      .catch((error) => {
+        console.error('Email sending error:', error);
+        alert('Failed to send email, please try again later.');
+        setLoading(false);
+      });
+  };
 
   return isOpen ? (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-      <div className="bg-white p-8 rounded-lg shadow-xl w-96">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div className="bg-gray-900 p-8 rounded-lg shadow-xl w-96 text-white">
         <h3 className="text-2xl font-semibold mb-4">Collaborate with {investor.name}</h3>
         <form onSubmit={handleSendEmail} className="space-y-4">
           <div className="flex flex-col">
             <label className="text-lg">Your Message:</label>
             <textarea
-              className="p-3 border border-gray-300 rounded-md w-full"
+              className="p-3 border border-gray-700 rounded-md w-full bg-gray-800 text-white"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={4}
@@ -68,13 +64,13 @@ const handleSendEmail = (e: React.FormEvent<HTMLFormElement>) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-gray-400 text-white rounded-md"
+              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition duration-300"
             >
               Close
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-gradient-to-r from-green-400 to-teal-500 text-white rounded-md"
+              className="px-4 py-2 bg-gradient-to-r from-green-400 to-teal-500 text-white rounded-md hover:from-green-500 hover:to-teal-600 transition duration-300"
               disabled={loading}
             >
               {loading ? 'Sending...' : 'Send Proposal'}
