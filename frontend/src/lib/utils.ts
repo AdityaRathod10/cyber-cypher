@@ -6,9 +6,16 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export async function parseCSV(file: File): Promise<any[]> {
+// Define interface for the CSV data structure
+interface SalesData {
+  date: string;
+  amount: string;
+  [key: string]: string; // For any additional columns
+}
+
+export async function parseCSV(file: File): Promise<SalesData[]> {
   return new Promise((resolve, reject) => {
-    Papa.parse(file, {
+    Papa.parse<SalesData>(file, {
       header: true,
       complete: (results) => {
         resolve(results.data);
@@ -28,12 +35,19 @@ export function formatCurrency(value: number): string {
   }).format(value);
 }
 
-export function calculateTotalSales(data: any[]): number {
+export function calculateTotalSales(data: SalesData[]): number {
   return data.reduce((total, row) => total + (parseFloat(row.amount) || 0), 0);
 }
 
-export function groupDataByMonth(data: any[]): any[] {
-  const groupedData = data.reduce((acc: any, row) => {
+// Interface for grouped data
+interface GroupedSalesData {
+  month: string;
+  total: number;
+  count: number;
+}
+
+export function groupDataByMonth(data: SalesData[]): GroupedSalesData[] {
+  const groupedData = data.reduce<Record<string, GroupedSalesData>>((acc, row) => {
     const date = new Date(row.date);
     if (!isNaN(date.getTime())) {
       const month = date.toLocaleString('default', { month: 'long' });

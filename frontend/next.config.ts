@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
   // Ignore TypeScript errors during build
   typescript: {
     ignoreBuildErrors: true,
+  },
+  // experimental features configuration
+  experimental: {
+       
   }
 };
 
