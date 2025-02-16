@@ -329,6 +329,55 @@ export default function MarketAnalysis() {
                 </div>
               </div>
             </div>
+{results && results.timeline && results.timeline.length > 0 && (
+  <div className="bg-gray-800/30 backdrop-blur-md rounded-2xl shadow-xl border border-gray-700/50 overflow-hidden">
+    <div className="p-6">
+      <h2 className="text-2xl font-bold mb-2 flex items-center">
+        <svg className="w-6 h-6 mr-2 text-purple-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"></path>
+        </svg>
+        6-Month Timeline
+      </h2>
+      <p className="text-gray-400 mb-4">AI-generated roadmap for your product launch</p>
+    </div>
+    <div className="px-6 pb-6">
+      <div className="space-y-6">
+        {results.timeline.map((month, index) => (
+          <div key={index} className="relative">
+            {/* Timeline connector */}
+            {index < results.timeline.length - 1 && (
+              <div className="absolute top-8 bottom-0 left-4 w-0.5 bg-purple-500/30"></div>
+            )}
+            
+            {/* Month indicator */}
+            <div className="flex items-start space-x-4">
+              <div className="relative z-10 flex-shrink-0 w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-sm">{index + 1}</span>
+              </div>
+              
+              <div className="flex-grow">
+                <h3 className="text-xl font-semibold text-purple-300 mb-3">{month.month}</h3>
+                
+                <div className="bg-gray-700/30 rounded-xl p-4 border border-gray-600/50">
+                  <ul className="space-y-2">
+                    {month.tasks.map((task, taskIndex) => (
+                      <li key={taskIndex} className="flex items-start space-x-2">
+                        <svg className="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
+                        </svg>
+                        <span className="text-gray-200">{task}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
           </div>
         )}
       </div>

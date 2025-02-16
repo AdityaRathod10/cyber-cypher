@@ -7,6 +7,7 @@ import { Loader2, ThumbsUp, ThumbsDown, Copy, Trash, MessageSquare } from 'lucid
 import { Bar,Line,Pie,Radar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip, Legend, registerables } from 'chart.js';
 import { generateInsights } from '@/lib/gemini';
+import AnimatedRiskAnalysis from './AnimatedRiskAnalysis';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend, ...registerables);
 
@@ -21,6 +22,7 @@ type Message = {
 export default function ValidationChat() {
   const [loading, setLoading] = useState(false);
   const [activeChat, setActiveChat] = useState('current');
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'agent',
@@ -87,6 +89,8 @@ export default function ValidationChat() {
     
     return `${hours}:${formattedMinutes} ${ampm}`;
   }
+
+  
 
   const handleSubmit = async () => {
     if (!input.trim()) return;
@@ -172,15 +176,6 @@ export default function ValidationChat() {
      - Monetization potential
      - Sustainability
 
-  4. **Competitor Analysis**:
-     - List 3-5 key competitors.
-     - For each competitor, provide:
-       - Name
-       - Market Share (if available)
-       - Strengths
-       - Weaknesses
-       - Key Differentiator
-
   5. **Recommendations**:
      - Key actionable strategies for success
      - Investment potential & funding suggestions
@@ -189,12 +184,6 @@ export default function ValidationChat() {
   - Scores: [Innovation & Differentiation Score, Market Demand Score, Competitive Landscape Score, Risk & Scalability Factor]
   - Key Selling Points: [Paragraph]
   - Business Model Viability: [Paragraph]
-  - Competitor Analysis:
-    - Competitor: [Name]
-      - Market Share: [Value]
-      - Strengths: [List]
-      - Weaknesses: [List]
-      - Differentiator: [Paragraph]
   - Recommendations: [Paragraph]
     `;
 
@@ -434,53 +423,10 @@ export default function ValidationChat() {
           </div>
         </div>
 
-        {/* Competitor Market Share */}
-        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
-          <h4 className="text-base font-semibold mb-2">Competitor Market Share</h4>
-          <div className="h-64">
-            <Pie
-              data={{
-                labels: validationResult.competitors.map(competitor => competitor.name),
-                datasets: [{
-                  label: 'Market Share',
-                  data: validationResult.competitors.map(competitor => competitor.marketShare),
-                  backgroundColor: ['#8B5CF6', '#22D3EE', '#F87171', '#FACC15', '#4ADE80'],
-                }],
-              }}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: true, position: 'bottom' } },
-              }}
-            />
-          </div>
-        </div>
 
         {/* Risk Analysis */}
-        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
-          <h4 className="text-base font-semibold mb-2">Risk Analysis</h4>
-          <div className="h-64">
-            <Radar
-              data={{
-                labels: ['Financial Risk', 'Market Risk', 'Operational Risk', 'Regulatory Risk', 'Technological Risk'],
-                datasets: [{
-                  label: 'Risk Level',
-                  data: [65, 59, 80, 81, 56],
-                  backgroundColor: 'rgba(139, 92, 246, 0.2)',
-                  borderColor: '#8B5CF6',
-                }],
-              }}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                  r: { beginAtZero: true },
-                },
-                plugins: { legend: { display: false } },
-              }}
-            />
-          </div>
-        </div>
+        <AnimatedRiskAnalysis />
+
 
         {/* Revenue Projections */}
         <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
@@ -541,71 +487,6 @@ export default function ValidationChat() {
         <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
           <h4 className="text-base font-semibold mb-2">Business Model Viability</h4>
           <p className="text-gray-300 text-sm">{validationResult.businessModel}</p>
-        </div>
-
-        {/* Competitor Analysis */}
-        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
-          <h4 className="text-base font-semibold mb-2">Competitor Analysis</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {validationResult.competitors.map((competitor, idx) => (
-              <div key={idx} className="p-4 bg-[#1E1433]/70 rounded-lg shadow-[0_0_5px_rgba(168,85,247,0.3)]">
-                <h5 className="font-semibold text-purple-400 mb-3">{competitor.name}</h5>
-                
-                {/* Market Share Pie Chart */}
-                <div className="mb-4">
-                  <h6 className="text-sm font-medium text-gray-300 mb-2">Market Share</h6>
-                  <div className="h-32">
-                    <Bar
-                      data={{
-                        labels: ['Competitor', 'Remaining Market'],
-                        datasets: [{
-                          label: 'Market Share',
-                          data: [competitor.marketShare, 100 - competitor.marketShare],
-                          backgroundColor: ['#8B5CF6', '#433b5c'],
-                        }],
-                      }}
-                      options={{
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Strengths and Weaknesses */}
-                <div className="space-y-2">
-                  <h6 className="text-sm font-medium text-gray-300">Strengths</h6>
-                  <ul className="space-y-1">
-                    {competitor.strengths.map((strength, idx) => (
-                      <li key={idx} className="flex items-center gap-2 text-sm text-gray-300">
-                        <span className="text-green-400">✅</span>
-                        {strength}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="space-y-2 mt-3">
-                  <h6 className="text-sm font-medium text-gray-300">Weaknesses</h6>
-                  <ul className="space-y-1">
-                    {competitor.weaknesses.map((weakness, idx) => (
-                      <li key={idx} className="flex items-center gap-2 text-sm text-gray-300">
-                        <span className="text-red-400">❌</span>
-                        {weakness}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Differentiator */}
-                <div className="mt-4">
-                  <h6 className="text-sm font-medium text-gray-300">Differentiator</h6>
-                  <p className="text-sm text-gray-300">{competitor.differentiator}</p>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Recommendations */}
