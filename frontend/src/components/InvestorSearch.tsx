@@ -1,10 +1,11 @@
-'use client'
+'use client';
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Loader2, ExternalLink, MapPin, Briefcase, BarChart } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import CollaborationModal from './CollaborationModal'; // Import the modal component
 
 interface Investor {
   name: string;
@@ -63,53 +64,64 @@ const LoadingSkeleton = () => {
   );
 };
 
-const InvestorCard = ({ investor, index }: { investor: Investor; index: number }) => (
-  <Card className="w-full hover:shadow-2xl transition-all duration-300 bg-white/10 backdrop-blur-sm border-none shadow-xl">
-    <CardContent className="p-6">
-      <div className="flex gap-4">
-        {/* Profile Image Section */}
-        <div className="relative">
-          <div className={`h-16 w-16 rounded-full bg-gradient-to-br ${getAvatarStyle(index)} flex items-center justify-center text-white font-bold text-xl`}>
-            {getInitials(investor.name)}
-          </div>
-          <div className="absolute -bottom-1 -right-1 h-5 w-5 bg-green-500 rounded-full border-2 border-white" />
-        </div>
+const InvestorCard = ({ investor, index }: { investor: Investor; index: number }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-        {/* Main Content */}
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-lg text-white truncate">{investor.name}</h3>
-          <div className="flex items-center text-gray-300 mt-1">
-            <Briefcase className="h-4 w-4 mr-1 flex-shrink-0" />
-            <p className="truncate text-sm">{investor.title}</p>
-          </div>
-          <div className="flex items-center text-gray-300 mt-1">
-            <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-            <p className="text-sm">{investor.location}</p>
-          </div>
-        </div>
+  return (
+    <>
+      <Card className="w-full hover:shadow-2xl transition-all duration-300 bg-white/10 backdrop-blur-sm border-none shadow-xl">
+        <CardContent className="p-6">
+          <div className="flex gap-4">
+            {/* Profile Image Section */}
+            <div className="relative">
+              <div className={`h-16 w-16 rounded-full bg-gradient-to-br ${getAvatarStyle(index)} flex items-center justify-center text-white font-bold text-xl`}>
+                {getInitials(investor.name)}
+              </div>
+            </div>
 
-        {/* Right Side Content */}
-        <div className="flex flex-col items-end justify-between ml-4">
-          <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
-            <BarChart className="h-4 w-4 text-white" />
-            <span className="text-sm font-medium text-white">
-              Relevance: {investor.relevance_score}%
-            </span>
+            {/* Main Content */}
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-lg text-white truncate">{investor.name}</h3>
+              <div className="flex items-center text-gray-300 mt-1">
+                <p className="text-sm">{investor.title}</p>
+              </div>
+              <div className="flex items-center text-gray-300 mt-1">
+                <p className="text-sm">{investor.location}</p>
+              </div>
+            </div>
+
+            {/* Right Side Content */}
+            <div className="flex flex-col items-end justify-between ml-4">
+              <a
+                href={investor.profile_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-blue-500 rounded-md hover:from-purple-600 hover:to-blue-600 transition-all duration-300 shadow-md hover:shadow-lg"
+              >
+                View Profile
+              </a>
+
+              {/* Collaborate Button */}
+              <Button
+                className="mt-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-green-400 to-teal-500 rounded-md hover:from-green-500 hover:to-teal-600 transition-all duration-300 shadow-md hover:shadow-lg"
+                onClick={() => setIsModalOpen(true)} // Open modal on click
+              >
+                Collaborate
+              </Button>
+            </div>
           </div>
-          <a
-            href={investor.profile_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-blue-500 rounded-md hover:from-purple-600 hover:to-blue-600 transition-all duration-300 shadow-md hover:shadow-lg"
-          >
-            View Profile
-            <ExternalLink className="ml-1 h-4 w-4" />
-          </a>
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
+        </CardContent>
+      </Card>
+
+      {/* Collaboration Modal */}
+      <CollaborationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        investor={investor}
+      />
+    </>
+  );
+};
 
 const InvestorSearch = () => {
   const [description, setDescription] = useState('');
