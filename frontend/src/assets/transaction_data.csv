@@ -1,0 +1,101 @@
+id,date,amount,customer,product,category
+1,2024-09-02,3748.4,Advika Chander,Laptop,Electronics
+2,2024-09-07,18603.57,Mishti Virk,Smartphone,Electronics
+3,2024-12-31,23919.41,Nirvi Soni,Fiction,Books
+4,2024-02-17,23933.31,Krish Chaudhari,Non-Fiction,Books
+5,2024-06-06,12260.51,Farhan Mani,Fiction,Books
+6,2025-01-07,3593.3,Veer Jayaraman,Fiction,Books
+7,2024-07-28,6217.9,Lagan Sodhi,Fiction,Books
+8,2024-06-04,8719.19,Diya Dara,Jacket,Clothing
+9,2025-01-18,20193.42,Armaan Tella,Vegetable Oil,Groceries
+10,2024-10-07,29770.97,Hrishita Lanka,Table,Furniture
+11,2024-12-14,35035.18,Azad Varma,Chair,Furniture
+12,2024-03-29,738.49,Azad Sheth,Headphones,Electronics
+13,2024-04-27,24736.12,Miraan Sharma,Rice,Groceries
+14,2024-04-30,35206.22,Alia Rama,Fiction,Books
+15,2024-03-17,14557.99,Dhanush Dalal,Self-Help,Books
+16,2025-01-03,12596.15,Biju Mangat,T-shirt,Clothing
+17,2024-09-18,49030.47,Kiaan Sunder,Fiction,Books
+18,2024-07-25,23061.57,Dhanuk Baria,Headphones,Electronics
+19,2024-07-21,40168.72,Darshit Bava,Milk,Groceries
+20,2024-05-11,31732.92,Miraya Thakkar,Jeans,Clothing
+21,2024-05-06,36057.29,Kartik Karpe,T-shirt,Clothing
+22,2024-07-18,21861.73,Badal Bawa,Bed,Furniture
+23,2025-01-08,27570.98,Jayesh Yohannan,Sweater,Clothing
+24,2024-03-19,30976.87,Riya Balasubramanian,Chair,Furniture
+25,2024-09-15,5240.85,Mahika Manne,Laptop,Electronics
+26,2024-09-24,16178.84,Urvi Atwal,Self-Help,Books
+27,2024-12-23,6690.81,Abram Banik,Rice,Groceries
+28,2024-06-02,36288.12,Lakshit Banik,Smartphone,Electronics
+29,2024-04-21,28134.31,Advik Chaudhary,Sweater,Clothing
+30,2024-11-02,33726.99,Parinaaz Kalita,Headphones,Electronics
+31,2024-10-08,15888.84,Yashvi Bir,Table,Furniture
+32,2024-03-14,43143.46,Divij Gour,Fiction,Books
+33,2024-07-14,4721.43,Himmat Arya,Sweater,Clothing
+34,2024-04-28,37371.69,Mohanlal Chanda,Non-Fiction,Books
+35,2024-03-17,21569.12,Prerak Bera,Wheat Flour,Groceries
+36,2024-10-24,29460.85,Oorja Sule,Smartphone,Electronics
+37,2024-08-07,24983.98,Ivan Venkatesh,Non-Fiction,Books
+38,2024-10-31,1892.22,Aarna Manda,Wheat Flour,Groceries
+39,2024-05-29,13453.28,Aayush Dada,Table,Furniture
+40,2024-06-19,34739.81,Lakshit Chada,Self-Help,Books
+41,2024-12-08,28978.12,Zaina Dugar,Vegetable Oil,Groceries
+42,2024-05-25,1314.12,Anaya Agate,Smartphone,Electronics
+43,2024-11-15,37173.07,Dhanuk Kara,Self-Help,Books
+44,2024-12-07,22022.0,Saksham Kata,Smartphone,Electronics
+45,2024-05-19,19769.72,Dhanuk Sinha,Headphones,Electronics
+46,2024-05-26,44596.98,Eshani Gala,Biography,Books
+47,2024-09-09,15358.02,Hrishita Gill,Table,Furniture
+48,2024-11-02,15627.69,Elakshi Sinha,Smartwatch,Electronics
+49,2025-01-08,24184.22,Nirvaan Srinivas,Jacket,Clothing
+50,2024-02-15,17559.29,Zeeshan Goswami,Jacket,Clothing
+51,2024-06-18,4832.32,Vardaniya Korpal,Vegetable Oil,Groceries
+52,2024-10-10,42291.67,Amira Kala,Self-Help,Books
+53,2024-08-02,3691.39,Ehsaan Sharma,Jacket,Clothing
+54,2024-04-29,37127.87,Aarna Handa,Smartwatch,Electronics
+55,2024-10-08,3812.34,Shray Mani,Milk,Groceries
+56,2024-02-28,34604.59,Nehmat Mahajan,Jeans,Clothing
+57,2024-03-18,23325.77,Hazel Kaur,Non-Fiction,Books
+58,2025-01-17,7143.97,Ishaan Bawa,Headphones,Electronics
+59,2024-07-27,1853.61,Eva Singh,Biography,Books
+60,2024-08-13,14966.72,Damini Bakshi,Vegetable Oil,Groceries
+61,2024-09-29,23164.6,Arhaan Kade,Milk,Groceries
+62,2024-10-31,49937.53,Krish Bhagat,Rice,Groceries
+63,2024-12-05,17708.05,Vivaan Ganesan,Fiction,Books
+64,2024-12-01,37671.32,Hridaan Verma,Bed,Furniture
+65,2024-11-04,34385.12,Shanaya Jain,Jeans,Clothing
+66,2024-07-08,30724.09,Taimur Tandon,Laptop,Electronics
+67,2024-05-23,45548.94,Ivan Jani,Smartwatch,Electronics
+68,2025-01-04,29291.86,Miraya Kala,Sofa,Furniture
+69,2024-10-14,45898.29,Divyansh Mangat,Biography,Books
+70,2024-03-02,11173.47,Indrajit Kulkarni,Table,Furniture
+71,2025-01-10,47816.4,Ayesha Mallick,Table,Furniture
+72,2024-04-17,35694.06,Reyansh Mandal,Rice,Groceries
+73,2025-01-10,21517.01,Ira Sen,Laptop,Electronics
+74,2024-04-23,8977.79,Faiyaz Raval,Biography,Books
+75,2024-04-28,23120.58,Sara Shankar,Self-Help,Books
+76,2024-03-23,2856.41,Zoya Bassi,Sofa,Furniture
+77,2024-08-04,29951.59,Anaya Dey,Rice,Groceries
+78,2024-10-14,35650.48,Anvi Wali,Jacket,Clothing
+79,2024-03-04,20716.17,Shray Shankar,Rice,Groceries
+80,2024-07-24,13963.33,Dhanush Kala,Wheat Flour,Groceries
+81,2024-05-08,11194.6,Ivan Koshy,Rice,Groceries
+82,2024-07-31,39492.57,Farhan Raval,Smartphone,Electronics
+83,2024-07-25,38259.75,Sana Kata,Biography,Books
+84,2024-03-30,35151.31,Tejas Vasa,Non-Fiction,Books
+85,2024-03-28,36112.13,Alia Sawhney,Milk,Groceries
+86,2024-11-17,9273.1,Kashvi D’Alia,Jacket,Clothing
+87,2025-02-06,46245.1,Nayantara Ahuja,Fiction,Books
+88,2024-12-20,15906.86,Vritika Master,Non-Fiction,Books
+89,2024-07-30,33817.1,Divij Bakshi,Non-Fiction,Books
+90,2024-03-11,34587.02,Vritika Sehgal,Vegetable Oil,Groceries
+91,2024-04-19,24073.82,Vedika Bala,Smartwatch,Electronics
+92,2025-01-11,30662.9,Rania Ranganathan,T-shirt,Clothing
+93,2024-09-14,1501.13,Rohan Garde,Chair,Furniture
+94,2024-08-02,34497.93,Kashvi Chawla,T-shirt,Clothing
+95,2025-01-13,22506.62,Tejas Issac,Laptop,Electronics
+96,2024-12-15,43861.07,Aaina Zachariah,Bed,Furniture
+97,2024-11-20,8450.04,Sana Majumdar,Non-Fiction,Books
+98,2024-07-17,21913.68,Aniruddh Ramakrishnan,Milk,Groceries
+99,2024-09-28,18073.64,Saanvi Buch,Vegetable Oil,Groceries
+100,2024-08-23,44798.52,Eshani Tiwari,Laptop,Electronics
