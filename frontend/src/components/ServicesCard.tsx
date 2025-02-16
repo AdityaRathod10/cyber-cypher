@@ -24,33 +24,35 @@ const data = [
     category: "Validate your business idea with AI",
     title: "Idea AI.",
     src: "/diego-ph-fIq0tET6llw-unsplash.jpg",
-    content: "/validation"
+    content: "/validation",
+    route: "/validation"
   },
   {
     category: "Find investors for your startup.",
     title: "Networking.",
     src: "/hunters-race-MYbhN8KaaEc-unsplash.jpg",
-    content: ""
+    content: "/investors",
+    route: "/investors"
   },
   {
     category: "Explore Beyond.", 
     title: "Find Market Competitors.",
     src: "/marissa-grootes-ck0i9Dnjtj0-unsplash.jpg",
-    content: ""
+    content: "/competitors",
+    route: "/competitors"
   },
   {
     category: "Predict the Future.", 
     title: "Market Trends and Prediction.",
     src: "/anne-nygard-x07ELaNFt34-unsplash.jpg",
-    content: ""
+    content: "/planning",
+    route: "/planning"
   },
-
   {
     category: "Get Insights based on your data.",
     title: "Analytics Dashboard.",
     src: "/path-digital-tR0jvlsmCuQ-unsplash.jpg",
-    content: ""
+    content: "/dashboard",
+    route: "/dashboard"
   },
-  
- 
 ];

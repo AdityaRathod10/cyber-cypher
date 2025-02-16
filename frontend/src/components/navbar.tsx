@@ -42,7 +42,7 @@ export default function Navbar() {
       </div>
 
       {isMenuOpen && (
-        <div className="absolute top-full left-0 right-0 bg-black/90 p-4 sm:hidden">
+        <div className="z-10 absolute top-full left-0 right-0 bg-black/90 p-4 sm:hidden">
           <NavLink href="/validation" onClick={() => handleNavigation("/validation")}>
             Idea AI
           </NavLink>
