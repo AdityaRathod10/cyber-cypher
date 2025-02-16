@@ -138,3 +138,99 @@ def find_investors(data: CompanyInput):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+class CompanyInput(BaseModel):
+    description: str
+    size: int  # Example: "11-50 employees"
+
+def rank_competitors_with_gemini(competitors, description, size):
+    """
+    Uses Gemini AI to rank competitors based on similarity to the given company.
+    """
+    try:
+        prompt = f"""
+        Given the following company description:
+        "{description}"
+
+        And the list of potential competitor companies:
+        {json.dumps(competitors, indent=2)}
+
+        Rank these companies based on how much they smiliar they are to the first company
+        Consider:
+        - Similarity in industry and business model
+        - Company size match
+        - Overlapping target market and customers
+
+        Return ONLY a valid JSON array without any extra explanation or formatting NO MARKDOWN, NEWLINES OR SPACES.
+        Each object should have:
+        - "name": Companies name
+        - "industry": companies title
+        - "size": companies size location
+        - "profile_url": A link to their LinkedIn profile
+        - "similarity_score": A score between 0-100 indicating how similar they are the first company (higher is better).
+
+        arrange the objects in descending order of similarity_score.
+        """
+
+        model = genai.GenerativeModel("gemini-pro")
+        response = model.generate_content(prompt)
+        if not response or not response.text:
+            return competitors  # Return unranked list if no response
+
+        try:
+            ranked_competitors = json.loads(response.text.strip())
+            if isinstance(ranked_competitors, list):
+                return ranked_competitors
+        except json.JSONDecodeError:
+            print("⚠ Gemini returned invalid JSON. Using unranked competitors.")
+
+        return competitors  # Return unranked list if parsing fails
+
+    except Exception as e:
+        print("Ranking error:", e)
+        return competitors  # Return unranked list if Gemini fails
+
+
+@app.post("/find-competitors")
+def find_competitors(data: CompanyInput):
+    """
+    Finds and ranks competitor companies using LinkedIn API and Gemini AI.
+    """
+        # Step 1: Generate search parameters using Gemini
+    prompt = f"""
+    Given the following startup description: "{data.description}",
+    generate one keyword that can be used to filter on linkedin for smiliar companies in this format:
+    ["Keyword"]
+    """
+
+    model = genai.GenerativeModel("gemini-pro")
+    response = model.generate_content(prompt)
+
+    if not response or not response.text:
+        return {"error": "No response from Gemini API"}
+
+    print(response.text)
+    keyword=response.text
+
+    # Step 2: Use LinkedIn API to Search for Similar Companies
+    competitors = linkedin.search_companies(
+        keywords=keyword,
+        limit=20
+    )
+
+    if not competitors:
+        return {"message": "No competitors found."}
+
+    # Step 3: Format Data
+    competitor_list = []
+    for company in competitors:
+        competitor_list.append({
+            "name": company.get("name", "Unknown"),
+            "industry": company.get("headline", "Unknown"),
+            "size": company.get("subline", "Unknown"),
+            "profile_url": f"https://www.linkedin.com/company/{company.get('urn_id')}"
+        })
+
+    # Step 4: Rank Competitors using Gemini
+    ranked_competitors = rank_competitors_with_gemini(competitor_list, data.description, data.size)
+
+    return {"competitors": ranked_competitors}

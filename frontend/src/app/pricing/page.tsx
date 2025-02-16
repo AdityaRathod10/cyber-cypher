@@ -1,4 +1,5 @@
 
+import Navbar from "@/components/navbar"
 import PricingPage from "@/components/pricing-page"
 import { SparklesCore } from "@/components/sparkles"
 
@@ -6,24 +7,13 @@ import { SparklesCore } from "@/components/sparkles"
 export default function Home() {
   return (
     <main className="min-h-screen bg-black/[0.96] antialiased bg-grid-white/[0.02] relative overflow-hidden">
-      {/* Ambient background with moving particles */}
-      <div className="h-full w-full absolute inset-0 z-0">
-        <SparklesCore
-          id="tsparticlesfullpage"
-          background="transparent"
-          minSize={0.6}
-          maxSize={1.4}
-          particleDensity={100}
-          className="w-full h-full"
-          particleColor="#FFFFFF"
-        />
-      </div>
 
-      <div className="relative z-10">
-       <PricingPage/>
-      
-        
-      </div>
+      <div className="min-h-screen bg-gray-900 text-white">
+        <Navbar/>
+        <div>
+        <PricingPage/>
+        </div>
+        </div>
     </main>
   )
 }
