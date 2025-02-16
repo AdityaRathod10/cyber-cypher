@@ -291,3 +291,15 @@ async def health_check():
         "mock_mode": MOCK_MODE,
         "linkedin_client": "connected" if linkedin else "disconnected"
     }
+
+@app.get("/")
+async def root():
+    return {
+        "message": "Welcome to the Investor Search API",
+        "endpoints": {
+            "find_investors": "/find-investors",
+            "find_competitors": "/find-competitors",
+            "health": "/health"
+        },
+        "status": "online"
+    }
