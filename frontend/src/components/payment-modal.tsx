@@ -16,24 +16,25 @@ interface PaymentMethod {
 }
 
 const paymentMethods: PaymentMethod[] = [
+    {
+        id: "Gpay",
+        name: "Gpay",
+        logo: "/gpay1.png?height=40&width=120",
+        description: "Pay with Indian payment methods",
+      },
   {
     id: "paypal",
     name: "PayPal",
-    logo: "/placeholder.svg?height=40&width=120",
+    logo: "/paypal.png?height=40&width=120",
     description: "Pay with your PayPal account",
   },
   {
     id: "stripe",
     name: "Stripe",
-    logo: "/placeholder.svg?height=40&width=120",
+    logo: "/stripe.png?height=40&width=120",
     description: "Pay with credit card",
   },
-  {
-    id: "mollie",
-    name: "Mollie",
-    logo: "/placeholder.svg?height=40&width=120",
-    description: "Pay with European payment methods",
-  },
+ 
 ]
 
 interface PaymentModalProps {
