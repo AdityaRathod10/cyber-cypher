@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, ThumbsUp, ThumbsDown, Copy, Trash, MessageSquare } from 'lucide-react';
-import { Bar,Line,Pie,Radar } from 'react-chartjs-2';
+import { Bar, Line, Pie, Radar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip, Legend, registerables } from 'chart.js';
 import { generateInsights } from '@/lib/gemini';
 import AnimatedRiskAnalysis from './AnimatedRiskAnalysis';
@@ -22,7 +22,6 @@ type Message = {
 export default function ValidationChat() {
   const [loading, setLoading] = useState(false);
   const [activeChat, setActiveChat] = useState('current');
-  
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'agent',
@@ -56,7 +55,7 @@ export default function ValidationChat() {
     weaknesses: string[];
     differentiator: string;
   }
-  
+
   interface ValidationResult {
     scores: {
       uniqueness: number;
@@ -81,21 +80,14 @@ export default function ValidationChat() {
     let hours = date.getHours();
     const minutes = date.getMinutes();
     const ampm = hours >= 12 ? 'PM' : 'AM';
-    
     hours = hours % 12;
     hours = hours ? hours : 12; // the hour '0' should be '12'
-    
     const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
-    
     return `${hours}:${formattedMinutes} ${ampm}`;
   }
 
-  
-
   const handleSubmit = async () => {
     if (!input.trim()) return;
-    
-    // Add user message
     const newMessages: Message[] = [
       ...messages,
       {
@@ -104,14 +96,10 @@ export default function ValidationChat() {
         timestamp: formatTime(new Date())
       }
     ];
-    
     setMessages(newMessages);
     setInput('');
     setLoading(true);
-    
-    // If we haven't asked all questions yet
     if (currentQuestion < questions.length - 1) {
-      // Add next question from agent
       setTimeout(() => {
         setMessages([
           ...newMessages,
@@ -126,7 +114,6 @@ export default function ValidationChat() {
         setLoading(false);
       }, 1000);
     } else if (currentQuestion === questions.length - 1 && !analysisComplete) {
-      // Time to generate analysis
       try {
         await generateAnalysis(newMessages);
         setAnalysisComplete(true);
@@ -147,54 +134,39 @@ export default function ValidationChat() {
   };
 
   const generateAnalysis = async (currentMessages: Message[]) => {
-    // Extract answers
     const answers = currentMessages
       .filter(msg => msg.role === 'user')
       .map(msg => msg.content);
-    
     const prompt = `
       Analyze the following startup idea with a detailed, multi-dimensional approach:
-  
-  - **Idea**: ${answers[0]}  
-  - **Location**: ${answers[1]}  
-  - **Resources & Funding**: ${answers[2]}  
-  
-  **Provide a structured, data-driven analysis including:**  
-
-  1. **Scores (0-100)**:
-     - Innovation & Differentiation Score
-     - Market Demand Score
-     - Competitive Landscape Score
-     - Risk & Scalability Factor
-
-  2. **Key Selling Points**:
-     - What makes this idea unique?
-     - What is the USP (Unique Selling Proposition)?
-
-  3. **Business Model Viability**:
-     - Revenue streams
-     - Monetization potential
-     - Sustainability
-
-  5. **Recommendations**:
-     - Key actionable strategies for success
-     - Investment potential & funding suggestions
-
-  **Output Format**:
-  - Scores: [Innovation & Differentiation Score, Market Demand Score, Competitive Landscape Score, Risk & Scalability Factor]
-  - Key Selling Points: [Paragraph]
-  - Business Model Viability: [Paragraph]
-  - Recommendations: [Paragraph]
+      - **Idea**: ${answers[0]}  
+      - **Location**: ${answers[1]}  
+      - **Resources & Funding**: ${answers[2]}  
+      **Provide a structured, data-driven analysis including:**  
+      1. **Scores (0-100)**:
+         - Innovation & Differentiation Score
+         - Market Demand Score
+         - Competitive Landscape Score
+         - Risk & Scalability Factor
+      2. **Key Selling Points**:
+         - What makes this idea unique?
+         - What is the USP (Unique Selling Proposition)?
+      3. **Business Model Viability**:
+         - Revenue streams
+         - Monetization potential
+         - Sustainability
+      5. **Recommendations**:
+         - Key actionable strategies for success
+         - Investment potential & funding suggestions
+      **Output Format**:
+      - Scores: [Innovation & Differentiation Score, Market Demand Score, Competitive Landscape Score, Risk & Scalability Factor]
+      - Key Selling Points: [Paragraph]
+      - Business Model Viability: [Paragraph]
+      - Recommendations: [Paragraph]
     `;
-
-    // Call Gemini
     const insights = await generateInsights(prompt);
-    
-    // Parse insights
     const parsedInsights = parseInsights(insights);
     setValidationResult(parsedInsights);
-    
-    // Add analysis message
     setMessages([
       ...currentMessages,
       {
@@ -206,36 +178,28 @@ export default function ValidationChat() {
   };
 
   const parseInsights = (text: string): ValidationResult => {
-    // Extract scores
     const scores = {
       uniqueness: parseInt(text.match(/Innovation & Differentiation Score:\s*(\d+)/i)?.[1] || '0'),
       marketDemand: parseInt(text.match(/Market Demand Score:\s*(\d+)/i)?.[1] || '0'),
       competition: parseInt(text.match(/Competitive Landscape Score:\s*(\d+)/i)?.[1] || '0'),
       riskFactor: parseInt(text.match(/Risk & Scalability Factor:\s*(\d+)/i)?.[1] || '0'),
     };
-
-    // Extract key sections with more robust patterns
     const keySellingPointsMatch = text.match(/Key Selling Points:?\s*([\s\S]*?)(?=\s*Business Model Viability:|$)/i);
     const keySellingPoints = keySellingPointsMatch?.[1]?.trim() || "No key selling points available.";
-    
     const businessModelMatch = text.match(/Business Model Viability:?\s*([\s\S]*?)(?=\s*Recommendations:|$)/i);
     const businessModel = businessModelMatch?.[1]?.trim() || "No business model viability available.";
-    
     const recommendationsMatch = text.match(/Recommendations:?\s*([\s\S]*?)$/i);
     const recommendations = recommendationsMatch?.[1]?.trim() || "No recommendations available.";
-
     const competitors: Competitor[] = [];
-  const competitorBlocks = text.match(/Competitor:\s*([\s\S]*?)(?=\nCompetitor:|$)/gi) || [];
-  competitorBlocks.forEach((block) => {
-    const name = block.match(/Name:\s*([^\n]+)/i)?.[1]?.trim() || "Unknown";
-    const marketShare = parseInt(block.match(/Market Share:\s*(\d+)/i)?.[1] || '0');
-    const strengths = block.match(/Strengths:\s*([\s\S]*?)(?=\nWeaknesses:|$)/i)?.[1]?.trim().split('\n').map(s => s.replace(/^\*\s*/, '')) || [];
-    const weaknesses = block.match(/Weaknesses:\s*([\s\S]*?)(?=\nDifferentiator:|$)/i)?.[1]?.trim().split('\n').map(s => s.replace(/^\*\s*/, '')) || [];
-    const differentiator = block.match(/Differentiator:\s*([^\n]+)/i)?.[1]?.trim() || "No differentiator available.";
-
-    competitors.push({ name, marketShare, strengths, weaknesses, differentiator });
-  });
-
+    const competitorBlocks = text.match(/Competitor:\s*([\s\S]*?)(?=\nCompetitor:|$)/gi) || [];
+    competitorBlocks.forEach((block) => {
+      const name = block.match(/Name:\s*([^\n]+)/i)?.[1]?.trim() || "Unknown";
+      const marketShare = parseInt(block.match(/Market Share:\s*(\d+)/i)?.[1] || '0');
+      const strengths = block.match(/Strengths:\s*([\s\S]*?)(?=\nWeaknesses:|$)/i)?.[1]?.trim().split('\n').map(s => s.replace(/^\*\s*/, '')) || [];
+      const weaknesses = block.match(/Weaknesses:\s*([\s\S]*?)(?=\nDifferentiator:|$)/i)?.[1]?.trim().split('\n').map(s => s.replace(/^\*\s*/, '')) || [];
+      const differentiator = block.match(/Differentiator:\s*([^\n]+)/i)?.[1]?.trim() || "No differentiator available.";
+      competitors.push({ name, marketShare, strengths, weaknesses, differentiator });
+    });
     return {
       scores,
       keySellingPoints,
@@ -248,10 +212,9 @@ export default function ValidationChat() {
   const startNewChat = () => {
     const newChatId = `chat-${Date.now()}`;
     setChatHistory([
-      ...chatHistory.map(chat => ({...chat, active: false})),
+      ...chatHistory.map(chat => ({ ...chat, active: false })),
       { id: newChatId, name: `Chat ${chatHistory.length}`, active: true }
     ]);
-    
     setActiveChat(newChatId);
     setMessages([{
       role: 'agent',
@@ -267,12 +230,12 @@ export default function ValidationChat() {
   return (
     <div className="flex h-screen overflow-hidden bg-[#1E1433]">
       {/* Sidebar for chat history */}
-      <div className="w-64 flex-shrink-0 border-r border-purple-900 border-opacity-50 shadow-[1px_0_5px_rgba(168,85,247,0.3)] bg-[#191129] text-white">
+      <div className="w-64 flex-shrink-0 border-r border-purple-900 border-opacity-50 shadow-[1px_0_5px_rgba(168,85,247,0.3)] bg-[#191129] text-white hidden md:block">
         <div className="p-4 border-b border-purple-900 border-opacity-50">
           <h2 className="text-xl font-semibold">SoloFounder.AI</h2>
         </div>
         <div className="p-4">
-          <Button 
+          <Button
             onClick={startNewChat}
             className="w-full bg-[#A855F7] hover:bg-purple-600 text-white flex items-center gap-2 shadow-[0_0_10px_rgba(168,85,247,0.5)]"
           >
@@ -283,7 +246,7 @@ export default function ValidationChat() {
         <div className="px-2 pb-4 space-y-1 overflow-y-auto max-h-[calc(100vh-120px)]">
           <div className="mb-2 px-2 text-xs uppercase text-gray-400 font-semibold">Recent Chats</div>
           <div className="rounded-md overflow-hidden border border-purple-900 border-opacity-30">
-            <div 
+            <div
               className="p-2 bg-[#2D1D50] cursor-pointer flex items-center gap-2"
             >
               <MessageSquare size={16} className="text-gray-400" />
@@ -291,7 +254,7 @@ export default function ValidationChat() {
             </div>
           </div>
           {chatHistory.filter(chat => chat.id !== 'current').map((chat) => (
-            <div 
+            <div
               key={chat.id}
               className={`p-2 rounded-md cursor-pointer flex items-center gap-2 ${
                 chat.active ? 'bg-[#2D1D50]' : 'hover:bg-[#2D1D50]/50'
@@ -304,21 +267,21 @@ export default function ValidationChat() {
           ))}
         </div>
       </div>
-      
+
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-w-0 max-h-screen">
         {/* Header */}
         <div className="p-4 border-b border-purple-900 border-opacity-50 shadow-[0_1px_5px_rgba(168,85,247,0.3)] bg-[#1E1433] text-white flex justify-between items-center">
           <h1 className="text-xl font-semibold">AI Startup Validator</h1>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="text-white hover:bg-purple-800"
             onClick={startNewChat}
           >
             New Chat
           </Button>
         </div>
-        
+
         {/* Chat area - make sure this has a fixed height and scrolls */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
           {messages.map((message, idx) => (
@@ -334,8 +297,8 @@ export default function ValidationChat() {
                   <span className="text-sm text-gray-400">{message.timestamp}</span>
                 </div>
                 <div className={`mt-1 p-3 rounded-lg ${
-                  message.role === 'agent' 
-                    ? 'bg-[#2D1D50] text-white shadow-[0_0_5px_rgba(168,85,247,0.3)]' 
+                  message.role === 'agent'
+                    ? 'bg-[#2D1D50] text-white shadow-[0_0_5px_rgba(168,85,247,0.3)]'
                     : 'bg-[#433b5c] text-white'
                 }`}>
                   {message.content}
@@ -350,155 +313,153 @@ export default function ValidationChat() {
               </div>
             </div>
           ))}
-          
+
           {/* Analysis results */}
           {validationResult && analysisComplete && (
-  <div className="flex items-start gap-3">
-    <div className="w-8 h-8 rounded-full bg-[#A855F7] flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.5)]">
-      AI
-    </div>
-    <div className="flex-1">
-      <div className="flex items-center gap-2">
-        <span className="font-medium text-white">AI Agent</span>
-        <span className="text-sm text-gray-400">{formatTime(new Date())}</span>
-      </div>
-      <div className="mt-1 p-4 rounded-lg bg-[#2D1D50] text-white space-y-4 shadow-[0_0_10px_rgba(168,85,247,0.3)]">
-        <h3 className="text-lg font-semibold">Analysis Results</h3>
-        
-        {/* Scores Chart */}
-        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
-          <h4 className="text-base font-semibold mb-2">Scores</h4>
-          <div className="h-64">
-            <Bar
-              data={{
-                labels: ['Uniqueness', 'Market Demand', 'Competition', 'Risk Factor'],
-                datasets: [{
-                  label: 'Score',
-                  data: [
-                    validationResult.scores.uniqueness,
-                    validationResult.scores.marketDemand,
-                    validationResult.scores.competition,
-                    validationResult.scores.riskFactor,
-                  ],
-                  backgroundColor: ['#8B5CF6', '#22D3EE', '#F87171', '#FACC15'],
-                }],
-              }}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                  y: { beginAtZero: true, max: 100 },
-                  x: { grid: { color: 'rgba(255, 255, 255, 0.1)' } },
-                },
-                plugins: { legend: { display: false } },
-              }}
-            />
-          </div>
-        </div>
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-[#A855F7] flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.5)]">
+                AI
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-white">AI Agent</span>
+                  <span className="text-sm text-gray-400">{formatTime(new Date())}</span>
+                </div>
+                <div className="mt-1 p-4 rounded-lg bg-[#2D1D50] text-white space-y-4 shadow-[0_0_10px_rgba(168,85,247,0.3)]">
+                  <h3 className="text-lg font-semibold">Analysis Results</h3>
 
-        {/* Market Demand Trends */}
-        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
-          <h4 className="text-base font-semibold mb-2">Market Demand Trends</h4>
-          <div className="h-64">
-            <Line
-              data={{
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                datasets: [{
-                  label: 'Market Demand',
-                  data: [65, 59, 80, 81, 56, 55, 40, 70, 75, 85, 90, 95],
-                  borderColor: '#8B5CF6',
-                  fill: false,
-                }],
-              }}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                  y: { beginAtZero: true },
-                  x: { grid: { color: 'rgba(255, 255, 255, 0.1)' } },
-                },
-                plugins: { legend: { display: false } },
-              }}
-            />
-          </div>
-        </div>
+                  {/* Scores Chart */}
+                  <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+                    <h4 className="text-base font-semibold mb-2">Scores</h4>
+                    <div className="h-64">
+                      <Bar
+                        data={{
+                          labels: ['Uniqueness', 'Market Demand', 'Competition', 'Risk Factor'],
+                          datasets: [{
+                            label: 'Score',
+                            data: [
+                              validationResult.scores.uniqueness,
+                              validationResult.scores.marketDemand,
+                              validationResult.scores.competition,
+                              validationResult.scores.riskFactor,
+                            ],
+                            backgroundColor: ['#8B5CF6', '#22D3EE', '#F87171', '#FACC15'],
+                          }],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          scales: {
+                            y: { beginAtZero: true, max: 100 },
+                            x: { grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                          },
+                          plugins: { legend: { display: false } },
+                        }}
+                      />
+                    </div>
+                  </div>
 
+                  {/* Market Demand Trends */}
+                  <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+                    <h4 className="text-base font-semibold mb-2">Market Demand Trends</h4>
+                    <div className="h-64">
+                      <Line
+                        data={{
+                          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                          datasets: [{
+                            label: 'Market Demand',
+                            data: [65, 59, 80, 81, 56, 55, 40, 70, 75, 85, 90, 95],
+                            borderColor: '#8B5CF6',
+                            fill: false,
+                          }],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          scales: {
+                            y: { beginAtZero: true },
+                            x: { grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                          },
+                          plugins: { legend: { display: false } },
+                        }}
+                      />
+                    </div>
+                  </div>
 
-        {/* Risk Analysis */}
-        <AnimatedRiskAnalysis />
+                  {/* Risk Analysis */}
+                  <AnimatedRiskAnalysis />
 
+                  {/* Revenue Projections */}
+                  <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+                    <h4 className="text-base font-semibold mb-2">Revenue Projections</h4>
+                    <div className="h-64">
+                      <Line
+                        data={{
+                          labels: ['2023', '2024', '2025', '2026', '2027'],
+                          datasets: [{
+                            label: 'Revenue',
+                            data: [100000, 150000, 200000, 250000, 300000],
+                            borderColor: '#8B5CF6',
+                            fill: false,
+                          }],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          scales: {
+                            y: { beginAtZero: true },
+                            x: { grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                          },
+                          plugins: { legend: { display: false } },
+                        }}
+                      />
+                    </div>
+                  </div>
 
-        {/* Revenue Projections */}
-        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
-          <h4 className="text-base font-semibold mb-2">Revenue Projections</h4>
-          <div className="h-64">
-            <Line
-              data={{
-                labels: ['2023', '2024', '2025', '2026', '2027'],
-                datasets: [{
-                  label: 'Revenue',
-                  data: [100000, 150000, 200000, 250000, 300000],
-                  borderColor: '#8B5CF6',
-                  fill: false,
-                }],
-              }}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                  y: { beginAtZero: true },
-                  x: { grid: { color: 'rgba(255, 255, 255, 0.1)' } },
-                },
-                plugins: { legend: { display: false } },
-              }}
-            />
-          </div>
-        </div>
+                  {/* Customer Segmentation */}
+                  <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+                    <h4 className="text-base font-semibold mb-2">Customer Segmentation</h4>
+                    <div className="h-64">
+                      <Pie
+                        data={{
+                          labels: ['Segment A', 'Segment B', 'Segment C', 'Segment D'],
+                          datasets: [{
+                            label: 'Customer Segmentation',
+                            data: [40, 30, 20, 10],
+                            backgroundColor: ['#8B5CF6', '#22D3EE', '#F87171', '#FACC15'],
+                          }],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: { legend: { display: true, position: 'bottom' } },
+                        }}
+                      />
+                    </div>
+                  </div>
 
-        {/* Customer Segmentation */}
-        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
-          <h4 className="text-base font-semibold mb-2">Customer Segmentation</h4>
-          <div className="h-64">
-            <Pie
-              data={{
-                labels: ['Segment A', 'Segment B', 'Segment C', 'Segment D'],
-                datasets: [{
-                  label: 'Customer Segmentation',
-                  data: [40, 30, 20, 10],
-                  backgroundColor: ['#8B5CF6', '#22D3EE', '#F87171', '#FACC15'],
-                }],
-              }}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: true, position: 'bottom' } },
-              }}
-            />
-          </div>
-        </div>
+                  {/* Key Selling Points */}
+                  <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+                    <h4 className="text-base font-semibold mb-2">Key Selling Points</h4>
+                    <p className="text-gray-300 text-sm">{validationResult.keySellingPoints}</p>
+                  </div>
 
-        {/* Key Selling Points */}
-        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
-          <h4 className="text-base font-semibold mb-2">Key Selling Points</h4>
-          <p className="text-gray-300 text-sm">{validationResult.keySellingPoints}</p>
-        </div>
+                  {/* Business Model Viability */}
+                  <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+                    <h4 className="text-base font-semibold mb-2">Business Model Viability</h4>
+                    <p className="text-gray-300 text-sm">{validationResult.businessModel}</p>
+                  </div>
 
-        {/* Business Model Viability */}
-        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
-          <h4 className="text-base font-semibold mb-2">Business Model Viability</h4>
-          <p className="text-gray-300 text-sm">{validationResult.businessModel}</p>
-        </div>
+                  {/* Recommendations */}
+                  <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
+                    <h4 className="text-base font-semibold mb-2">Recommendations</h4>
+                    <p className="text-gray-300 text-sm">{validationResult.recommendations}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
-        {/* Recommendations */}
-        <div className="p-4 bg-[#1E1433]/50 rounded-lg border border-purple-900 border-opacity-30">
-          <h4 className="text-base font-semibold mb-2">Recommendations</h4>
-          <p className="text-gray-300 text-sm">{validationResult.recommendations}</p>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-          
           {loading && (
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-[#A855F7] flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.5)]">
@@ -527,8 +488,8 @@ export default function ValidationChat() {
               placeholder="Type your message..."
               className="bg-[#2E1F47] border-gray-700 text-white flex-1 min-w-0"
             />
-            <Button 
-              onClick={handleSubmit} 
+            <Button
+              onClick={handleSubmit}
               disabled={loading || !input.trim()}
               className="bg-[#A855F7] hover:bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.5)] flex-shrink-0"
             >
