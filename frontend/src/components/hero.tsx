@@ -5,8 +5,16 @@ import { motion } from "framer-motion"
 import { FileText, Sparkles } from "lucide-react"
 import { FloatingPaper } from "@/components/floating-paper"
 import { RoboAnimation } from "@/components/robo-animation"
+import { useRouter } from "next/navigation" // Import useRouter
 
 export default function Hero() {
+  const router = useRouter() // Initialize the router
+
+  // Function to handle the "Get Started" button click
+  const handleGetStarted = () => {
+    router.push("https://open-gnat-7.accounts.dev/sign-in?redirect_url=http%3A%2F%2Flocalhost%3A3000%2F") // Redirect to the Clerk sign-up page
+  }
+
   return (
     <div className="relative min-h-[calc(100vh-76px)] flex items-center">
       {/* Floating papers background */}
@@ -41,7 +49,12 @@ export default function Hero() {
             transition={{ duration: 0.5, delay: 0.4 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white px-8">
+            {/* Add onClick handler to the "Get Started" button */}
+            <Button
+              size="lg"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-8"
+              onClick={handleGetStarted} // Call handleGetStarted on click
+            >
               <FileText className="mr-2 h-5 w-5" />
               Get Started
             </Button>
@@ -60,4 +73,3 @@ export default function Hero() {
     </div>
   )
 }
-
