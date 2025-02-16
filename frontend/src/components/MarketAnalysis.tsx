@@ -41,6 +41,7 @@ interface Results {
   product: string;
   trends: Trend[];
   predictions: Predictions;
+  timeline: Array<{ month: string; tasks: string[] }>; // Add timeline to results
 }
 
 export default function MarketAnalysis() {
@@ -82,7 +83,8 @@ export default function MarketAnalysis() {
       const mockPredictions = {
         predictedRevenue: (Math.floor(Math.random() * 10000) + 500) * 83, // Convert to rupees
         riskAnalysis: "Medium risk. Market shows positive growth but competition is increasing.",
-        investmentAreas: ["Marketing", "Product Development", "Customer Support"]
+        investmentAreas: ["Marketing", "Product Development", "Customer Support"],
+        timeline: await generateTimeline(product, ["Marketing", "Product Development", "Customer Support"])
       };
       const timeline = await generateTimeline(product, mockPredictions.investmentAreas);
       setResults({
