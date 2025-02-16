@@ -33,8 +33,8 @@ const data = [
     content: ""
   },
   {
-    category: "Plan everything to perfection.", 
-    title: "Strategy and Timeline.",
+    category: "Explore Beyond.", 
+    title: "Market Trends and Competitors.",
     src: "/marissa-grootes-ck0i9Dnjtj0-unsplash.jpg",
     content: ""
   },

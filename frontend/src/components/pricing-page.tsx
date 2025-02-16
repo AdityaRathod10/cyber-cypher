@@ -1,49 +1,54 @@
-import { PricingCard } from "@/components/pricing-card"
+import { PricingCard } from "@/components/pricing-card";
 
 const plans = [
   {
     name: "Starter",
-    price: 60,
+    price: 99,
     period: "month",
-    features: ["Up to 10,000 data points per month", "Email support", "Community forum access", "Cancel anytime"],
+    features: [
+      "AI-powered business idea validation",
+      "Basic market trends analysis",
+      "Access to community discussions",
+      "Cancel anytime",
+    ],
   },
   {
     name: "Pro",
-    price: 180,
+    price: 249,
     period: "quarter",
     featured: true,
     features: [
-      "Advanced analytics dashboard",
-      "Customizable reports and charts",
-      "Real-time data tracking",
-      "Integration with third-party tools",
-      "Everything in Hobby Plan",
+      "In-depth business idea validation",
+      "Competitor analysis and insights",
+      "Access to investor network",
+      "Advanced market trends tracking",
+      "Everything in Starter Plan",
     ],
   },
   {
     name: "Premium",
-    price: 600,
+    price: 799,
     period: "year",
     features: [
-      "Unlimited data storage",
-      "Customizable dashboards",
-      "Advanced data segmentation",
-      "Real-time data processing",
-      "AI-powered insights and recommendations",
-      "Everything in Hobby Plan",
+      "AI-powered predictive market trends",
+      "Comprehensive investor matchmaking",
+      "Real-time competitor tracking",
+      "Advanced analytics dashboard",
+      "Exclusive networking events",
+      "Everything in Starter Plan",
       "Everything in Pro Plan",
     ],
   },
-]
+];
 
 export default function PricingPage() {
   return (
     <div className="min-h-screen bg-black text-white py-20 px-4">
       <div className="max-w-6xl mx-auto space-y-12">
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold">Simple pricing for advanced people</h1>
+          <h1 className="text-4xl font-bold">Simple pricing for ambitious entrepreneurs</h1>
           <p className="text-gray-400 max-w-2xl mx-auto">
-            Our pricing is designed for advanced people who need more features and more flexibility.
+            Our pricing is designed to help you validate your ideas, analyze the market, and connect with investors.
           </p>
         </div>
 
@@ -54,6 +59,5 @@ export default function PricingPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-
