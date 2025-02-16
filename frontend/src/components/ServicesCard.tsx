@@ -34,8 +34,14 @@ const data = [
   },
   {
     category: "Explore Beyond.", 
-    title: "Market Trends and Competitors.",
+    title: "Find Market Competitors.",
     src: "/marissa-grootes-ck0i9Dnjtj0-unsplash.jpg",
+    content: ""
+  },
+  {
+    category: "Predict the Future.", 
+    title: "Market Trends and Prediction.",
+    src: "/anne-nygard-x07ELaNFt34-unsplash.jpg",
     content: ""
   },
 
@@ -45,5 +51,6 @@ const data = [
     src: "/path-digital-tR0jvlsmCuQ-unsplash.jpg",
     content: ""
   },
+  
  
 ];

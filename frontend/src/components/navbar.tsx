@@ -26,6 +26,7 @@ export default function Navbar() {
         <NavLink href="/dashboard">Analytics</NavLink>
         <NavLink href="/competitors">Competitor Search</NavLink>
         <NavLink href="/investors">Find Investors</NavLink>
+        <NavLink href="/planning">Market Trends</NavLink>
         <NavLink href="/pricing">Pricing</NavLink>
       </div>
 
